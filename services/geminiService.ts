@@ -3,6 +3,7 @@ import { BackendService } from "./mockBackend";
 import { QueueStats } from "../types";
 
 const getClient = () => {
+  // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
     console.warn("API_KEY is not set.");
@@ -95,10 +96,9 @@ export const GeminiService = {
   },
 
   /**
-   * Generates high-quality food images using Gemini 3 Pro Image (Nano Banana Pro).
+   * Generates high-quality food images.
    */
   generateMenuImage: async (prompt: string, size: '1K' | '2K' | '4K'): Promise<string | null> => {
-    // Check for user-selected API key first as required for Pro models
     if (typeof (window as any).aistudio !== 'undefined') {
         const hasKey = await (window as any).aistudio.hasSelectedApiKey();
         if(!hasKey) {
@@ -106,7 +106,6 @@ export const GeminiService = {
         }
     }
 
-    // Always create a new client to pick up the selected key
     const client = getClient();
     if (!client) return null;
 
@@ -124,7 +123,6 @@ export const GeminiService = {
         }
       });
       
-      // Iterate to find image part
       for (const part of response.candidates?.[0]?.content?.parts || []) {
           if (part.inlineData) {
               return `data:image/png;base64,${part.inlineData.data}`;

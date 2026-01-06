@@ -6,7 +6,6 @@ import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import { TrendingUp, Clock, Users, Activity, Sparkles, MoreHorizontal, Download } from 'lucide-react';
-import QRCode from 'react-qr-code';
 
 interface AdminViewProps {
     canteen: Canteen;
@@ -17,7 +16,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ canteen }) => {
   const [chartData, setChartData] = useState<{name: string, orders: number}[]>([]);
   const [insights, setInsights] = useState<string>('');
   const [loadingInsights, setLoadingInsights] = useState(false);
-  const [qrUrl, setQrUrl] = useState('');
+  const [qrSrc, setQrSrc] = useState<string>('');
 
   const loadData = async () => {
     const statsData = await BackendService.getStats(canteen.id);
@@ -30,7 +29,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ canteen }) => {
     // Construct the unique URL for this canteen
     const url = new URL(window.location.origin);
     url.searchParams.set('canteenId', canteen.id);
-    setQrUrl(url.toString());
+    
+    // Generate QR Image using a stable public API to avoid browser-side library issues
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url.toString())}&color=111827&bgcolor=ffffff`;
+    setQrSrc(qrApiUrl);
 
     loadData();
     window.addEventListener('smartqueue-update', loadData);
@@ -132,16 +134,24 @@ export const AdminView: React.FC<AdminViewProps> = ({ canteen }) => {
                  <p className="text-xs text-gray-400 mb-6">Scan to join {canteen.name} queue</p>
                  
                  <div className="bg-white p-4 rounded-xl border-4 border-gray-900 inline-block shadow-sm mb-4">
-                     {qrUrl && <QRCode value={qrUrl} size={140} />}
+                     {qrSrc ? (
+                         <img src={qrSrc} alt="Canteen QR Code" className="w-32 h-32" />
+                     ) : (
+                         <div className="w-32 h-32 bg-gray-100 animate-pulse rounded" />
+                     )}
                  </div>
                  
                  <div className="text-[10px] font-mono text-gray-400 bg-gray-50 p-2 rounded break-all mb-4 border border-gray-100">
                     ID: {canteen.id}
                  </div>
 
-                 <Button variant="outline" size="sm" fullWidth className="text-xs">
-                     <Download size={14} className="mr-2" /> Download Sticker
-                 </Button>
+                 {qrSrc && (
+                     <a href={qrSrc} download={`canteen-${canteen.id}-qr.png`} className="block w-full">
+                        <Button variant="outline" size="sm" fullWidth className="text-xs">
+                            <Download size={14} className="mr-2" /> Download Sticker
+                        </Button>
+                     </a>
+                 )}
             </div>
 
             {/* AI Insights */}
