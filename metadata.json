@@ -1,0 +1,7 @@
+{
+  "name": "Smart-Queue",
+  "description": "A smart digital waiting token system for campus canteens featuring AI-powered wait time predictions.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
